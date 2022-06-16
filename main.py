@@ -2,8 +2,12 @@
 import os.path
 
 import streamlit as st
+import streamlit.components.v1 as components
+#from streamlit_javascript import st_javascript
 from PIL import Image
 import cns
+import ych
+import codecs
 
 # import tkinter as tk
 # from tkinter import filedialog
@@ -20,17 +24,36 @@ st.markdown("<h1 style='text-align: center; color: black;'>Сервис для �
 # def load_image():
 #     image = Image.open(c_img)
 #     st.image(image, width=300)
-
+out_img = "output/ref1.png"
+image_size = 320
+epochs = 1
+batch_size = 4
+dataset = 'val2017'
+save_model_dir = 'models'
+content_weight = 1e5
+style_weight = 1e10
+lr = 1e-3
+log_interval = 1
+style_size = 256
+flag = 0
+c_image = None
+s_images = None
+choose = None
 
 with st.sidebar:
-    c_image = None
+    st.title('Обучить модель')
+    t_image = st.file_uploader("Загрузите стиль для обучения", type=["png", "jpg", "jpeg"])
     st.title('Исходное изображение')
-    option = st.selectbox('Загрузите изображение или сделайте фото', ('Upload_image', 'Take_a_photo'))
-    if option == 'Upload_image':
-        upload_image = st.file_uploader("Загрузите исходное изображение", type=["png", "jpg", "jpeg"])
-        if upload_image:
-            c_image = upload_image
-    elif option == 'Take_a_photo':
+
+    c_option = st.selectbox('Загрузите изображение или сделайте фото', ('Upload_image', 'Take_a_photo'))
+    # blabla = st.button("Добавить в селектбокс")
+    # if blabla:
+    #    c_option.append('chota')
+    if c_option == 'Upload_image':
+        upload_c_image = st.file_uploader("Загрузите исходное изображение", type=["png", "jpg", "jpeg"])
+        if upload_c_image:
+            c_image = upload_c_image
+    elif c_option == 'Take_a_photo':
         take_a_photo = st.camera_input("Сделайте фото")
         if take_a_photo:
             c_image = take_a_photo
@@ -89,8 +112,22 @@ with st.sidebar:
 #             st.write(type(dirname))
 
     st.title('Стиль')
-    s_images = st.file_uploader("Загрузите стилевые изображения", type=["png", "jpg", "jpeg"],
-                                accept_multiple_files=True)
+    s_option = st.selectbox('Загрузите свои стили или выберите готовый', ('Upload_styles', 'Choose_model'))
+    if s_option == 'Upload_styles':
+        upload_s_image = st.file_uploader("Загрузите стилевые изображения", type=["png", "jpg", "jpeg"],
+                                          accept_multiple_files=True)
+        if upload_s_image:
+            s_images = upload_s_image
+    elif s_option == 'Choose_model':
+        choose_model = st.selectbox("Выберите модель",
+                                    ('epoch_10_Fri_Jan_21_15_44_53_2022_100000.0_100000.0',
+                                     'ahr0cdovl3d3dy5saxzlc2n1.jpg_epoch_1_100000.0_10000000000.0',
+                                     'Artist Creates Magical And Whimsical Illustrations.jpg_epoch_1_100000.0_'
+                                     '10000000000.0',
+                                     'epoch_1__100000.0_10000000000.0',
+                                     'Монтажная област124ь 1.jpg_epoch_1_100000.0_10000000000.0', 'lion'))
+        if choose_model:
+            choose = choose_model
 
     if s_images is not None:
         if len(s_images) != 0:
@@ -133,10 +170,128 @@ with st.sidebar:
             # i += 1
             # Посмотреть подробности
 
-out_img = "output/ref1.png"
+if c_image and choose is not None:
+    st.write('Нажмите, чтобы применить обученный стиль к исходному изображению')
+    m_btn = st.button("Применить модель")
+    model = os.path.join('models', choose + '.model')
+    # st.write(model)
+    if m_btn:
+        ych.stylize(c_img, model, out_img)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("Исходное изображение:")
+            image = Image.open(c_img)
+            st.image(image, use_column_width=True)
+        with col2:
+            st.write("Стилизованное изображение:")
+            image = Image.open(out_img)
+            st.image(image, use_column_width=True)
 
-if s_images and c_image is not None:
-    iters = st.number_input('Количество итераций:', value=100)
+if s_images is None:
+    if c_image is None:
+        if t_image is not None:
+            st.write('Нажмите, чтобы обучить модель новому стилю')
+            t_btn = st.button("Обучить модель")
+            # st.write(model)
+            if t_btn:
+                ych.train(image_size, epochs, batch_size, dataset, save_model_dir, content_weight, style_weight, lr,
+                          log_interval, style_size, t_image)
+                st.success('Модель успешно обучена')
+
+html_share = '''
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GTCoding</title>
+<link rel="stylesheet" href="style.css" />
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css"
+/>
+<div class="share-btn-container">
+    <a href="#" class="facebook-btn">
+      <i class="fab fa-facebook"></i>
+    </a>
+    <a href="#" class="twitter-btn">
+      <i class="fab fa-twitter"></i>
+    </a>
+    <a href="#" class="pinterest-btn">
+      <i class="fab fa-pinterest"></i>
+    </a>
+    <a href="#" class="linkedin-btn">
+      <i class="fab fa-linkedin"></i>
+    </a>
+    <a href="#" class="whatsapp-btn">
+      <i class="fab fa-whatsapp"></i>
+    </a>
+</div>
+
+<div class="content">
+  <h1>The Heading</h1>
+  <p>
+    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nemo unde
+    voluptatem numquam illo ullam corporis dignissimos tenetur! Facere ipsum
+    iste quia praesentium est ipsa sint fuga error quasi, doloremque, qui
+    distinctio, unde necessitatibus molestiae suscipit eligendi facilis
+    corrupti dolores amet tempora et. Pariatur mollitia ipsam quibusdam
+    aliquid, rerum officia ipsa nostrum aut! Sint exercitationem itaque
+    deleniti aperiam unde aliquam molestias debitis, officia amet nesciunt
+    quasi consequuntur nihil nostrum quos reiciendis culpa est accusamus
+    error qui dicta quas suscipit, iste voluptates perspiciatis. Iure enim
+    earum possimus consequatur. Animi, delectus distinctio tempora
+    similique, pariatur, quod ratione consequuntur quo iusto ipsa quae hic.S
+  </p>
+  <img
+    class="pinterest-img"
+    src="https://images.unsplash.com/photo-1535223289827-42f1e9919769?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80"
+    alt=""
+  />
+</div>
+<script language="javascript">
+    const facebookBtn = document.querySelector(".facebook-btn");
+    const twitterBtn = document.querySelector(".twitter-btn");
+    const pinterestBtn = document.querySelector(".pinterest-btn");
+    const linkedinBtn = document.querySelector(".linkedin-btn");
+    const whatsappBtn = document.querySelector(".whatsapp-btn");
+    
+    function init() {
+      const pinterestImg = document.querySelector(".pinterest-img");
+    
+      let postUrl = encodeURI(document.location.href);
+      let postTitle = encodeURI("Hi everyone, please check this out: ");
+      let postImg = encodeURI(pinterestImg.src);
+    
+      facebookBtn.setAttribute(
+        "href",
+        `https://www.facebook.com/sharer.php?u=${postUrl}`
+      );
+    
+      twitterBtn.setAttribute(
+        "href",
+        `https://twitter.com/share?url=${postUrl}&text=${postTitle}`
+      );
+    
+      pinterestBtn.setAttribute(
+        "href",
+        `https://pinterest.com/pin/create/bookmarklet/?media=${postImg}&url=${postUrl}&description=${postTitle}`
+      );
+    
+      linkedinBtn.setAttribute(
+        "href",
+        `https://www.linkedin.com/shareArticle?url=${postUrl}&title=${postTitle}`
+      );
+    
+      whatsappBtn.setAttribute(
+        "href",
+        `https://wa.me/?text=${postTitle} ${postUrl}`
+      );
+    }
+    
+    init();
+</script>
+'''
+
+if s_images and c_image is not None and t_image is None:
+    iters = st.number_input('Количество итераций:', value=10)
     s_scl = st.number_input('Масштаб стиля', value=1.0)
     # st.write(type(s_blend_w))
     # st.write(s_scl)
@@ -160,12 +315,10 @@ if s_images and c_image is not None:
     if s_btn:
         if clr_cb:
             sv_clrs = 1
-        # st.write(sv_clrs)
-        # st.write("yes")
-        # st.write(s_scl)
+
+        # model = 'models/epoch_10_Fri_Jan_21_15_44_53_2022_100000.0_100000.0.model'
         cns.main(c_img, s_img, out_img, sv_clrs, s_scl, s_blend_w, iters, sw)
-        # st.write("<h3 style='text-align: center; color: black;'>Стилизованное изображение:</h3>",
-        #         unsafe_allow_html=True)
+
         col1, col2, col3 = st.columns(3)
         with col1:
             st.write("Исходное изображение:")
@@ -181,3 +334,7 @@ if s_images and c_image is not None:
             st.write("Стилизованное изображение:")
             image = Image.open(out_img)
             st.image(image, use_column_width=True)
+
+shr_btn = st.button('Sahar')
+if shr_btn:
+    components.html(html_share)
