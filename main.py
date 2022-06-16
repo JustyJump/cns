@@ -339,7 +339,7 @@ a2a_config.overlays.push({
 
 <script async src="https://static.addtoany.com/menu/page.js"></script>
 
-<img src="https://linuxhint.com/wp-content/uploads/2020/06/7.jpg" height="291" 
+<img src="https://apps.streamlitusercontent.com/justyjump/cns/master/main.py/+/media/cc58791eaf9b71c7c27d0c651145a8e0e4ab156ba1c6887364a703e5.jpeg" height="291" 
 width="440" alt="Dracaena cinnabari">
 ''')
 # shr_btn = st.button('Sahar')
