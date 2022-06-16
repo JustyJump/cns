@@ -3,12 +3,12 @@ import os.path
 
 import streamlit as st
 import streamlit.components.v1 as components
-#from streamlit_javascript import st_javascript
+# from streamlit_javascript import st_javascript
 from PIL import Image
 import cns
 import ych
-import lxml.html
-import codecs
+# import lxml.html
+# import codecs
 
 # import tkinter as tk
 # from tkinter import filedialog
@@ -198,7 +198,6 @@ if s_images is None:
                 ych.train(image_size, epochs, batch_size, dataset, save_model_dir, content_weight, style_weight, lr,
                           log_interval, style_size, t_image)
                 st.success('Модель успешно обучена')
-
 
 
 html_share = '''
