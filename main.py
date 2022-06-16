@@ -7,6 +7,7 @@ import streamlit.components.v1 as components
 from PIL import Image
 import cns
 import ych
+import lxml.html
 import codecs
 
 # import tkinter as tk
@@ -198,6 +199,8 @@ if s_images is None:
                           log_interval, style_size, t_image)
                 st.success('Модель успешно обучена')
 
+
+
 html_share = '''
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -208,38 +211,12 @@ html_share = '''
   href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css"
 />
 <div class="share-btn-container">
-    <a href="#" class="facebook-btn">
-      <i class="fab fa-facebook"></i>
-    </a>
-    <a href="#" class="twitter-btn">
-      <i class="fab fa-twitter"></i>
-    </a>
     <a href="#" class="pinterest-btn">
       <i class="fab fa-pinterest"></i>
-    </a>
-    <a href="#" class="linkedin-btn">
-      <i class="fab fa-linkedin"></i>
-    </a>
-    <a href="#" class="whatsapp-btn">
-      <i class="fab fa-whatsapp"></i>
     </a>
 </div>
 
 <div class="content">
-  <h1>The Heading</h1>
-  <p>
-    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nemo unde
-    voluptatem numquam illo ullam corporis dignissimos tenetur! Facere ipsum
-    iste quia praesentium est ipsa sint fuga error quasi, doloremque, qui
-    distinctio, unde necessitatibus molestiae suscipit eligendi facilis
-    corrupti dolores amet tempora et. Pariatur mollitia ipsam quibusdam
-    aliquid, rerum officia ipsa nostrum aut! Sint exercitationem itaque
-    deleniti aperiam unde aliquam molestias debitis, officia amet nesciunt
-    quasi consequuntur nihil nostrum quos reiciendis culpa est accusamus
-    error qui dicta quas suscipit, iste voluptates perspiciatis. Iure enim
-    earum possimus consequatur. Animi, delectus distinctio tempora
-    similique, pariatur, quod ratione consequuntur quo iusto ipsa quae hic.S
-  </p>
   <img
     class="pinterest-img"
     src="https://images.unsplash.com/photo-1535223289827-42f1e9919769?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80"
@@ -247,11 +224,7 @@ html_share = '''
   />
 </div>
 <script language="javascript">
-    const facebookBtn = document.querySelector(".facebook-btn");
-    const twitterBtn = document.querySelector(".twitter-btn");
     const pinterestBtn = document.querySelector(".pinterest-btn");
-    const linkedinBtn = document.querySelector(".linkedin-btn");
-    const whatsappBtn = document.querySelector(".whatsapp-btn");
     
     function init() {
       const pinterestImg = document.querySelector(".pinterest-img");
@@ -260,36 +233,40 @@ html_share = '''
       let postTitle = encodeURI("Hi everyone, please check this out: ");
       let postImg = encodeURI(pinterestImg.src);
     
-      facebookBtn.setAttribute(
-        "href",
-        `https://www.facebook.com/sharer.php?u=${postUrl}`
-      );
-    
-      twitterBtn.setAttribute(
-        "href",
-        `https://twitter.com/share?url=${postUrl}&text=${postTitle}`
-      );
-    
       pinterestBtn.setAttribute(
         "href",
-        `https://pinterest.com/pin/create/bookmarklet/?media=${postImg}&url=${postUrl}&description=${postTitle}`
+        `https://pinterest.com/pin/create/bookmarklet/?media=${postImg}&description=${postTitle}`
       );
-    
-      linkedinBtn.setAttribute(
-        "href",
-        `https://www.linkedin.com/shareArticle?url=${postUrl}&title=${postTitle}`
-      );
-    
-      whatsappBtn.setAttribute(
-        "href",
-        `https://wa.me/?text=${postTitle} ${postUrl}`
-      );
-    }
-    
+
+    } 
     init();
 </script>
 '''
+yasharu = '''
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GTCoding</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css"
+    />
+    <div class="share-btn-container">
 
+      <a href="#" class="pinterest-btn">
+        <i class="fab fa-pinterest"></i>
+      </a>
+
+    <div class="content">
+
+      <img
+        class="pinterest-img"
+        src="https://images.unsplash.com/photo-1535223289827-42f1e9919769?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80"
+        alt=""
+      />
+    </div>
+<script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-62ab30e2d4928946"></script>'''
+components.html(yasharu)
 if s_images and c_image is not None and t_image is None:
     iters = st.number_input('Количество итераций:', value=10)
     s_scl = st.number_input('Масштаб стиля', value=1.0)
@@ -334,7 +311,7 @@ if s_images and c_image is not None and t_image is None:
             st.write("Стилизованное изображение:")
             image = Image.open(out_img)
             st.image(image, use_column_width=True)
+# shr_btn = st.button('Sahar')
+# if shr_btn:
 
-shr_btn = st.button('Sahar')
-if shr_btn:
-    components.html(html_share)
+# components.html(html_share)
