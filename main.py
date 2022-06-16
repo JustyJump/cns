@@ -1,5 +1,6 @@
 # import io
 import os.path
+from io import BytesIO
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -8,7 +9,8 @@ from PIL import Image
 import cns
 import ych
 # import lxml.html
-# import codecs
+import codecs
+import requests
 
 # import tkinter as tk
 # from tkinter import filedialog
@@ -40,6 +42,13 @@ flag = 0
 c_image = None
 s_images = None
 choose = None
+
+
+def st_share(share_html):
+    share_file = codecs.open(share_html, 'r')
+    page = share_file.read()
+    components.html(page, width=1000, height=1000, scrolling=False)
+
 
 with st.sidebar:
     st.title('Обучить модель')
@@ -310,7 +319,30 @@ if s_images and c_image is not None and t_image is None:
             st.write("Стилизованное изображение:")
             image = Image.open(out_img)
             st.image(image, use_column_width=True)
+        # response = requests.get(hz)
+        # img = Image.open(response.raw)
+        # st.write(response)
+        # st.write(img)
+
+components.html('''
+<script>
+var a2a_config = a2a_config || {};
+a2a_config.overlays = a2a_config.overlays || [];
+a2a_config.overlays.push({
+    services: ['pinterest', 'facebook', 'houzz', 'tumblr', 'email'],
+    size: '50',
+    style: 'horizontal',
+    position: 'top center',
+    useImage: true,
+});
+</script>
+
+<script async src="https://static.addtoany.com/menu/page.js"></script>
+
+<img src="https://linuxhint.com/wp-content/uploads/2020/06/7.jpg" height="291" 
+width="440" alt="Dracaena cinnabari">
+''')
 # shr_btn = st.button('Sahar')
 # if shr_btn:
-
+#     st_share('social.html')
 # components.html(html_share)
