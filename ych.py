@@ -334,66 +334,29 @@ def train(image_size, epochs, batch_size, dataset, save_model_dir, content_weigh
 
     print("\nDone, trained model saved at", save_model_path)
 
-
-# def check_paths(save_model_dir):
-#     try:
-#         if not os.path.exists(vgg_model_dir):
-#             os.makedirs(vgg_model_dir)
-#         if not os.path.exists(save_model_dir):
-#             os.makedirs(save_model_dir)
-#     except OSError as e:
-#         print(e)
-#         sys.exit(1)
-
-# #!g1.1
-#
-# train({"image_size": 320,
-#        "epochs": 2,
-#        "batch_size": 4,
-#        "dataset": "/content/drive/MyDrive/NeuroStyle/val2017",
-#        "t_image": "/content/drive/MyDrive/NeuroStyle/images/style-images/van-gog.jpg",
-#        "save_model_dir": "/content/drive/MyDrive/NeuroStyle/model_dir",
-#        "content_weight": 1e5,
-#        "style_weight": 1e10,
-#        "lr": 1e-3,
-#        "log_interval": 500,
-#        "style_size": 256})
-
 # !g1.1
 def stylize(c_img, model, out_img):
     device = torch.device("cpu")
-    st.success('CPU подключено')
-
     c_img = load_image(c_img)
-    st.success('Исходное изображение загружено')
+
     content_transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Lambda(lambda x: x.mul(255))
     ])
     c_img = content_transform(c_img)
-    st.success('Изображение трансформировано')
     c_img = c_img.unsqueeze(0).to(device)
-    st.success('CPU обрабатывает исходное изображение')
 
     with torch.no_grad():
         style_model = TransformerNet()
-        st.success('Сеть трансформации')
         state_dict = torch.load(model)
-        st.success('Модель загружена')
+
         for k in list(state_dict.keys()):
             if re.search(r'in\d+\.running_(mean|var)$', k):
                 del state_dict[k]
-        style_model.load_state_dict(state_dict)
-        st.success('Загружен словарь')
-        style_model.to(device)
-        st.success('К стилю применен CPU')
-        output = style_model(c_img).cpu()
-        st.success('Результирующее изображение')
-    save_image(out_img, output[0])
-    st.success('Изображение сохранено')
 
-# #!g1.1
-# stylize({'c_img': '/content/drive/MyDrive/NeuroStyle/images/content-images/index.jpeg',
-#          "output_image": 'images/output-images/indexTembanda.jpg',
-#          "model": "model_dir/epoch_10_Mon_Mar_28_15:30:47_2022_100000.0_100000.0.model"
-#          })
+        style_model.load_state_dict(state_dict)
+        style_model.to(device)
+        output = style_model(c_img).cpu()
+
+    save_image(out_img, output[0])
+

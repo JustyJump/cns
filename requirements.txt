@@ -13,3 +13,6 @@ idna~=3.3
 requests~=2.27.1
 streamlit==1.10.0
 xlrd==2.0.1
+opencv-python==4.6.0.66
+matplotlib~=3.5.2
+lxml~=4.9.0

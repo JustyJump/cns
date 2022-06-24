@@ -8,42 +8,11 @@ import streamlit as st
 
 from PIL import Image
 
-# from ModelLoader import loadModel
-# from CaffeLoader import loadCaffemodel, ModelParallel
-
-# import argparse
-# p = argparse.ArgumentParser()
-# Базовые опции
-# p.add_argument("-s_img", default='style') # Изображение стиля
-# p.add_argument("-s_blend_w", default=None)
 s_blend_w = []  # Смешивание весов стилей
-# p.add_argument("-c_img", default='input/input.png') # Исходное изображение
-
-# Опции оптимизации
-# p.add_argument("-sw", type=float, default=1e3)
-# sw = 1e3 # Веса стилей
-# p.add_argument("-iters", type=int, default=50) # Количество итераций
-# iters = 50
-
-# Опции вывода
-# p.add_argument("-out_img", default='output/ref1.png')
-# out_img = 'output/ref1.png' # Название и путь сохранения результата
-
-# Другие опции
-# p.add_argument("-s_scl", type=float, default=1.0)
-# s_scl = 1.0 # Масштабирование стиля
-# p.add_argument("-sv_clrs", type=int, choices=[0, 1], default=0)
-# sv_clrs = 0 # Сохранение цветов исходного изображения
-# p.add_argument("-multidevice_strategy", default='4,7,29') #
-# params = p.parse_args()
-
 
 Image.MAX_IMAGE_PIXELS = 1000000000  # Поддержка больших изображений
 
 
-# Сеть выполняет подвыборку входных данных и
-# использует ядро билинейной дискретизации для повышения точности прогнозирования в 32 раза.
-# Если размер изображения не соответствует коэффициенту 32, будет предсказан другой размер
 class fcn32s(nn.Module):
     def __init__(self, features, num_classes=1000): 
         super(fcn32s, self).__init__()
@@ -78,10 +47,7 @@ def createSeq(source_ls, pool):
 
 
 source_ls = {
-    # 'VGG-16p': [24, 22, 'Pool', 41, 51, 'Pool', 108, 89, 111, 'Pool', 184, 276, 228, 'Pool', 512, 512, 512, 'Pool'],
-    'VGG-16': [64, 64, 'Pool', 128, 128, 'Pool', 256, 256, 256, 'Pool', 512, 512, 512, 'Pool', 512, 512, 512, 'Pool'],
-    # 'VGG-19': [64, 64, 'Pool', 128, 128, 'Pool', 256, 256, 256, 256, 'Pool', 512, 512, 512, 512, 'Pool', 512, 512,
-    # 512, 512, 'Pool']
+    'VGG-16': [64, 64, 'Pool', 128, 128, 'Pool', 256, 256, 256, 'Pool', 512, 512, 512, 'Pool', 512, 512, 512, 'Pool']
 }
 
 dict_vgg16 = {
@@ -129,21 +95,13 @@ def loadModel(f_mdl, pool, use_gpu, dis_check):
 
 
 def main(c_img, s_img, out_img, sv_clrs, s_scl, s_blend_w, iters, sw):
-    # p.add_argument("-cw", type=float, default=5e0)
     cw = 5e0  # Веса контента
-    # st.write(s_scl)
     dtype, backward_dev = gpuConf()
-    # multidevice,
-    # p.add_argument("-pu", default="c")
     pu = 'c'  # Процессор: Графический = 0, Центральный = c
-    # p.add_argument("-pool", choices=['avg', 'max'], default='max')
     pool = 'max'  # Вид пулинга (средний или максимальный)
-    # p.add_argument("-f_mdl", type=str, default='models/nyud-fcn32s-color-heavy.pth')
     f_mdl = 'models/nyud-fcn32s-color-heavy.pth'  # Предобученная архитектура модели
-    # p.add_argument("-dis_check", action='store_true')
     dis_check = True  # Отключить проверку
     cnn, lsLayers = loadModel(f_mdl, pool, pu, dis_check)
-    # p.add_argument("-img_size", type=int, default=512)
     img_size = 512  # Максимальные параметры (высота/ширина) сгенерированного изображения
 
     c_img = preproc(c_img, img_size).type(dtype)
@@ -161,7 +119,6 @@ def main(c_img, s_img, out_img, sv_clrs, s_scl, s_blend_w, iters, sw):
         s_size = int(img_size * s_scl)
         img_caf = preproc(image, s_size).type(dtype)
         s_imgs_caf.append(img_caf)
-    # p.add_argument("-init_img", default=None)
     init_img = None  # Изображение инициализации
     if init_img is not None:
         img_size = (c_img.size(2), c_img.size(3))
@@ -185,10 +142,8 @@ def main(c_img, s_img, out_img, sv_clrs, s_scl, s_blend_w, iters, sw):
         sum_s_blend = float(sum_s_blend) + s_blend_w[i]
     for i, bws in enumerate(s_blend_w):
         s_blend_w[i] = float(s_blend_w[i]) / float(sum_s_blend)
-    # p.add_argument("-cl", default='relu1_1,relu2_1,relu3_1,relu4_1,relu5_1')
     cl = 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1'  # Слои исходного изображения
     cl = cl.split(',')
-    # p.add_argument("-sl", default='relu1_1,relu2_1,relu3_1,relu4_1,relu5_1')
     sl = 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1'  # Слои стиля
     sl = sl.split(',')
 
@@ -198,13 +153,11 @@ def main(c_img, s_img, out_img, sv_clrs, s_scl, s_blend_w, iters, sw):
     next_c_idx, next_s_idx = 1, 1  # Индексы карт признаков контента и стиля
     net = nn.Sequential()
     c, r = 0, 0
-    # p.add_argument("-tv_w", type=float, default=1e-5)
     tv_w = 1e-5  # Вес сглаживания
     if tv_w > 0:
         tv_mod = LossTV(tv_w).type(dtype)
         net.add_module(str(len(net)), tv_mod)
         tv_losses.append(tv_mod)
-    # p.add_argument("-norm_g", action='store_true')
     norm_g = True  # Нормализация градиентов
     for i, layer in enumerate(list(cnn), 1):
         if next_c_idx <= len(cl) or next_s_idx <= len(sl):
@@ -245,9 +198,6 @@ def main(c_img, s_img, out_img, sv_clrs, s_scl, s_blend_w, iters, sw):
             if isinstance(layer, nn.MaxPool2d) or isinstance(layer, nn.AvgPool2d):
                 net.add_module(str(len(net)), layer)
 
-    # if multidevice:
-    #    net = setup_multi_device(net)
-
     # Фиксация содержания
     for i in c_losses:
         i.mode = 'capture'
@@ -271,7 +221,6 @@ def main(c_img, s_img, out_img, sv_clrs, s_scl, s_blend_w, iters, sw):
         i.mode = 'loss'
     for i in s_losses:
         i.mode = 'loss'
-    # p.add_argument("-norm_w", action='store_true')
     norm_w = True  # Нормализация весов
     # Нормализация весов содержания и стиля 
     if norm_w is True:
@@ -280,7 +229,6 @@ def main(c_img, s_img, out_img, sv_clrs, s_scl, s_blend_w, iters, sw):
     # Заморозка сети, для предотвращения лишних вычислений градиента
     for param in net.parameters():
         param.requires_grad = False
-    # p.add_argument("-init", choices=['random', 'image'], default='random')
     init = 'image'  # Инициализация (случайная или изображение)
     # Инициализация изображения
     if init == 'random':
@@ -297,7 +245,6 @@ def main(c_img, s_img, out_img, sv_clrs, s_scl, s_blend_w, iters, sw):
     def ptProb(t, loss):
         c_loss = 0
         s_loss = 0
-        # p.add_argument("-pt_iter", type=int, default=10)
         pt_iter = 1  # Итерация на которой печатается прогресс
         if pt_iter > 0 and t % pt_iter == 0:
             print("Итерация " + str(t) + " / " + str(iters))
@@ -314,7 +261,6 @@ def main(c_img, s_img, out_img, sv_clrs, s_scl, s_blend_w, iters, sw):
     slot3 = st.empty()
 
     def svProb(t):
-        # p.add_argument("-sv_iter", type=int, default=25)
         sv_iter = 2  # Итерация на которой просиходит вывод промежуточного результата
         sv_must = sv_iter > 0 and t % sv_iter == 0
         sv_must = sv_must or t == iters
@@ -351,7 +297,6 @@ def main(c_img, s_img, out_img, sv_clrs, s_scl, s_blend_w, iters, sw):
         opt.zero_grad()
         net(img)
         loss = 0
-        # p.add_argument("-tv_w", type=float, default=1e-5)
         tv_w = 1e-5  # Вес сглаживания
 
         for mod in c_losses:
@@ -378,11 +323,8 @@ def main(c_img, s_img, out_img, sv_clrs, s_scl, s_blend_w, iters, sw):
 
 # Конфигурация оптимизатора
 def optimConf(img, iters):
-    # p.add_argument("-opt", choices=['lbfgs', 'adam'], default='lbfgs')
     opt = 'lbfgs'  # Оптимизатор
-    # p.add_argument("-lr", type=float, default=1e0)
     lr = 1e0  # Шаг обучения
-    # p.add_argument("-lbfgs_num_of_corr", type=int, default=100)
     lbfgs_num_of_corr = 100  # Количество корректировок оптимизатора L-BFGS
     if opt == 'lbfgs':
         print("Оптимизация запущена с оптимизатором L-BFGS")
@@ -404,9 +346,7 @@ def optimConf(img, iters):
 
 def gpuConf():
     def setup_cuda():
-        # p.add_argument("-engine", choices=['cudnn', 'mkl'], default='cudnn')
         engine = 'cudnn'  # Движок
-        # p.add_argument("-autoconf", action='store_true')
         autoconf = True  # Автоматическая настройка
         if 'cudnn' in engine:
             torch.backends.cudnn.enabled = True
@@ -415,27 +355,6 @@ def gpuConf():
         else:
             torch.backends.cudnn.enabled = False
 
-    # def setup_cpu():
-    #     if 'mkl' in params.engine and 'mkldnn' not in params.engine:
-    #         torch.backends.mkl.enabled = True
-    #     elif 'mkldnn' in params.engine:
-    #         raise ValueError("MKL-DNN еще не поддерживается.")
-    #     elif 'openmp' in params.engine:
-    #         torch.backends.openmp.enabled = True
-
-    # multidevice = False
-    # if "," in str(params.pu):
-    #    devices = params.pu.split(',')
-    #    multidevice = True
-#
-    #    if 'c' in str(devices[0]).lower():
-    #        backward_dev = "cpu"
-    #        setup_cuda(), setup_cpu()
-    #    else:
-    #        backward_dev = "cuda:" + devices[0]
-    #        setup_cuda()
-    #    dtype = torch.FloatTensor
-    # p.add_argument("-pu", default="c")
     pu = 'c'  # Процессор: Графический = 0, Центральный = c
     if "c" not in str(pu).lower():
         setup_cuda()
@@ -444,14 +363,6 @@ def gpuConf():
         # setup_cpu()
         dtype, backward_dev = torch.FloatTensor, "cpu"
     return dtype, backward_dev  # , multidevice
-
-
-# def setup_multi_device(net):
-#    assert len(params.pu.split(',')) - 1 == len(params.multidevice_strategy.split(',')), \
-#      "The number of -multidevice_strategy layer indices minus 1, must be equal to the number of -pu devices."
-#
-#    new_net = ModelParallel(net, params.pu, params.multidevice_strategy)
-#    return new_net
 
 
 # Предобработка изображения перед передачей его в модель
@@ -486,33 +397,6 @@ def sv_clr(content, generated):
     gen_channels = list(generated.convert('YCbCr').split())
     c_channels[0] = gen_channels[0]
     return Image.merge('YCbCr', c_channels).convert('RGB')
-
-
-# def print_torch(net, multidevice):
-#    if multidevice:
-#        return
-#    simplelist = ""
-#    for i, layer in enumerate(net, 1):
-#        simplelist = simplelist + "(" + str(i) + ") -> "
-#    print("nn.Sequential ( \n  [input -> " + simplelist + "output]")
-#
-#    def strip(x):
-#        return str(x).replace(", ",',').replace("(",'').replace(")",'') #+ ", "
-#    def n():
-#        return "  (" + str(i) + "): " + "nn." + str(l).split("(", 1)[0]
-#
-#    for i, l in enumerate(net, 1):
-#         if "2d" in str(l):
-#             ks, st, pd = strip(l.kernel_size), strip(l.stride), strip#(l.padding)
-#             if "Conv2d" in str(l):
-#                 ch = str(l.in_channels) + " -> " + str(l.out_channels)
-#                 print(n() + "(" + ch + ", " + (ks).replace(",",'x', 1) #+ st + pd.replace(", ",')'))
-#             elif "Pool2d" in str(l):
-#                 st = st.replace("  ",' ') + st.replace(", ",')')
-#                 print(n() + "(" + ((ks).replace(",",'x' + ks, 1) + st#).replace(", ",','))
-#         else:
-#             print(n())
-#    print(")")
 
 
 # Деление весов на размер канала
